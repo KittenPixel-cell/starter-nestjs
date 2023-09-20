@@ -1,29 +1,45 @@
+const http = require('http');
 const https = require('https');
-const tls = require('tls');
 const url = require('url');
 
-https.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url, true);
-  const targetURL = parsedUrl.query.URL;
+const server = http.createServer((req, res) => {
+  const targetURL = req.url.replace('/?URL=', ''); // Extract the target URL
 
-  if (!targetURL) {
-    res.writeHead(400, { 'Content-Type': 'text/plain' });
-    res.end('Bad Request: URL parameter missing');
+  // Ignore requests for favicon.ico
+  if (req.url === '/favicon.ico') {
+    res.writeHead(204, { 'Content-Type': 'text/plain' });
+    res.end();
     return;
   }
 
-  https.get(targetURL, (response) => {
-    response.on('data', (data) => {
-      res.write(data);
-    });
-    response.on('end', () => {
-      res.end();
-    });
-  }).on('error', (err) => {
+  // Rest of your code to proxy the request
+  // ...
+
+  // Example code to proxy the request to the target URL
+  const target = new URL(targetURL);
+  const options = {
+    hostname: target.hostname,
+    port: target.port || (target.protocol === 'https:' ? 443 : 80),
+    path: target.pathname + target.search,
+    method: req.method,
+    headers: req.headers,
+  };
+
+  const proxyReq = (target.protocol === 'https:' ? https : http).request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers);
+    proxyRes.pipe(res, { end: true });
+  });
+
+  req.pipe(proxyReq, { end: true });
+
+  proxyReq.on('error', (err) => {
     console.error(err);
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end('Internal Server Error');
   });
-}).listen(3000, () => {
-  console.log('Server listening on port 3000');
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
