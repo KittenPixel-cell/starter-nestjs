@@ -17,17 +17,13 @@ const server = http.createServer((req, res) => {
     });
 
     response.on('end', () => {
-      // Modify the HTML as needed by appending or prepending content
-      responseData = responseData.replace('</head>', '<script src="your-script.js"></script></head>');
-      responseData = responseData.replace('<body>', '<body><h1>Hello, World!</h1>');
-
       // Set the response headers
       res.writeHead(200, {
-        'Content-Type': 'text/html',
+        'Content-Type': response.headers['content-type'],
         'Content-Length': Buffer.byteLength(responseData),
       });
 
-      // Send the modified HTML as the response
+      // Send the fetched content as the response
       res.end(responseData);
     });
   });
