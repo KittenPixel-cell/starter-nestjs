@@ -13,19 +13,20 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Process other requests
-  // ...
-
   // For example, fetch and proxy the requested URL
   const requestOptions = url.parse(targetURL);
   const client = requestOptions.protocol === 'https:' ? https : http;
 
   client.get(targetURL, (response) => {
+    let responseData = '';
+
     response.on('data', (data) => {
-      res.write(data);
+      responseData += data;
     });
+
     response.on('end', () => {
-      res.end();
+      res.writeHead(response.statusCode, response.headers);
+      res.end(responseData);
     });
   }).on('error', (err) => {
     console.error(err);
