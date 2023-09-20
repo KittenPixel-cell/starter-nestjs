@@ -1,22 +1,7 @@
 const https = require('https');
 const tls = require('tls');
-const { Agent } = require('https');
 const url = require('url');
-const http = require('http');
-
-class CustomAgent extends Agent {
-  createConnection(options, callback) {
-    options = {
-      ...options,
-      rejectUnauthorized: false, // Ignore SSL certificate errors
-    };
-
-    const socket = tls.connect(options, callback);
-    return socket;
-  }
-}
-
-https.Agent = CustomAgent;
+const http = require('http');9
 
 http.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
