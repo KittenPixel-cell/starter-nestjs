@@ -1,9 +1,8 @@
 const https = require('https');
 const tls = require('tls');
 const url = require('url');
-const http = require('http');9
 
-http.createServer((req, res) => {
+https.createServer((req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const targetURL = parsedUrl.query.URL;
 
