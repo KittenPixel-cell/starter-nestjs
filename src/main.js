@@ -5,14 +5,6 @@ const url = require('url');
 const server = http.createServer((req, res) => {
   const targetURL = req.url;
 
-  // Check if the requested URL is for the favicon.ico file
-  if (targetURL === '/favicon.ico') {
-    // Ignore the request for the favicon.ico file
-    res.writeHead(204, { 'Content-Length': '0' });
-    res.end();
-    return;
-  }
-
   // For example, fetch and proxy the requested URL
   const requestOptions = url.parse(targetURL);
   const client = requestOptions.protocol === 'https:' ? https : http;
@@ -20,18 +12,24 @@ const server = http.createServer((req, res) => {
   client.get(targetURL, (response) => {
     let responseData = '';
 
-    response.on('data', (data) => {
-      responseData += data;
+    response.on('data', (chunk) => {
+      responseData += chunk;
     });
 
     response.on('end', () => {
-      res.writeHead(response.statusCode, response.headers);
+      // Modify the HTML as needed by appending or prepending content
+      responseData = responseData.replace('</head>', '<script src="your-script.js"></script></head>');
+      responseData = responseData.replace('<body>', '<body><h1>Hello, World!</h1>');
+
+      // Set the response headers
+      res.writeHead(200, {
+        'Content-Type': 'text/html',
+        'Content-Length': Buffer.byteLength(responseData),
+      });
+
+      // Send the modified HTML as the response
       res.end(responseData);
     });
-  }).on('error', (err) => {
-    console.error(err);
-    res.writeHead(500, { 'Content-Type': 'text/plain' });
-    res.end('Internal Server Error');
   });
 });
 
